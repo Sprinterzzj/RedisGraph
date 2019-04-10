@@ -492,11 +492,12 @@ ExecutionPlan* _NewExecutionPlan(RedisModuleCtx *ctx, GraphContext *gc, AST *old
         uint exp_count = array_len(ast->return_expressions);
         // TODO silly
         exps = array_new(sizeof(AR_ExpNode), exp_count);
+        aliases = array_new(sizeof(AR_ExpNode), exp_count);
         for (uint i = 0; i < exp_count; i ++) {
             exps = array_append(exps, ast->return_expressions[i]->exp);
+            aliases = array_append(aliases, (char*)ast->return_expressions[i]->alias);
         }
-        aliases = ReturnClause_GetAliases(old_ast->returnNode);
-        aggregate = ReturnClause_ContainsAggregation(old_ast->returnNode);
+        aggregate = NEWAST_ClauseContainsAggregation(ret_clause);
     }
 
 
@@ -631,8 +632,9 @@ ExecutionPlan* NewExecutionPlan(RedisModuleCtx *ctx, GraphContext *gc, AST **ast
         if(ast[i]->whereNode != NULL) {
             Vector *sub_trees = FilterTree_SubTrees(curr_plan->filter_tree);
 
+            // TODO reintroduce something *like* this, if not exactly this
             /* For each filter tree find the earliest position along the execution 
-            * after which the filter tree can be applied. */
+             * after which the filter tree can be applied. */
             for(int i = 0; i < Vector_Size(sub_trees); i++) {
                 FT_FilterNode *tree;
                 Vector_Get(sub_trees, i, &tree);
@@ -641,7 +643,7 @@ ExecutionPlan* NewExecutionPlan(RedisModuleCtx *ctx, GraphContext *gc, AST **ast
 
                 /* Scan execution plan, locate the earliest position where all 
                  * references been resolved. */
-                OpBase *op = ExecutionPlan_Locate_References(plan->root, references);
+                OpBase *op = ExecutionPlan_Locate_References(curr_plan->root, references);
                 assert(op);
 
                 /* Create filter node.
@@ -657,6 +659,34 @@ ExecutionPlan* NewExecutionPlan(RedisModuleCtx *ctx, GraphContext *gc, AST **ast
             }
             Vector_Free(sub_trees);
         }
+
+            // TODO reintroduce something *like* this, if not exactly this
+            /* For each filter tree find the earliest position along the execution 
+            * after which the filter tree can be applied. */
+            // for(int i = 0; i < Vector_Size(sub_trees); i++) {
+                // FT_FilterNode *tree;
+                // Vector_Get(sub_trees, i, &tree);
+
+                // Vector *references = FilterTree_CollectAliases(tree);
+
+                /* Scan execution plan, locate the earliest position where all 
+                 * references been resolved. */
+                // OpBase *op = ExecutionPlan_Locate_References(plan->root, references);
+                // assert(op);
+
+                /* Create filter node.
+                 * Introduce filter op right below located op. */
+                // OpBase *filter_op = NewFilterOp(tree);
+                // ExecutionPlan_PushBelow(op, filter_op);
+                // for(int j = 0; j < Vector_Size(references); j++) {
+                    // char *ref;
+                    // Vector_Get(references, j, &ref);
+                    // free(ref);
+                // }
+                // Vector_Free(references);
+            // }
+            // Vector_Free(sub_trees);
+        // }
         optimizePlan(gc, plan, ast[i]);
     }
 

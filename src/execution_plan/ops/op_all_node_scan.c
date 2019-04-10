@@ -14,7 +14,8 @@ OpBase* NewAllNodeScanOp(const Graph *g, Node *n) {
     NEWAST *ast = NEWAST_GetFromTLS();
     // TODO queries like MATCH (a)-[e]->(b) RETURN a.name, e, b.name create larger records now than they did prior
     allNodeScan->nodeRecIdx = NEWAST_GetAliasID(ast, n->alias);
-    allNodeScan->recLength = NEWAST_AliasCount(ast);
+    allNodeScan->recLength = NEWAST_AliasCount(ast); // TODO insufficient after expanding entities
+    allNodeScan->recLength += 10;
 
     // Set our Op operations
     OpBase_Init(&allNodeScan->op);
